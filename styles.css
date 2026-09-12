@@ -60,7 +60,7 @@ svg{width:20px;height:20px;flex-shrink:0;display:block;}
 }
 .brand{padding:2px 10px 34px;}
 .brand-logo{display:flex;align-items:center;gap:10px;}
-.brand-logo-img{height:28px;width:auto;display:block;}
+.brand-logo-img{height:40px;width:auto;display:block;}
 .brand-logo-fallback{font-size:21px;font-weight:800;letter-spacing:.2px;color:var(--text);}
 .brand-sub{font-size:11.5px;color:var(--muted);margin-top:6px;letter-spacing:.2px;}
 
@@ -145,7 +145,7 @@ svg{width:20px;height:20px;flex-shrink:0;display:block;}
   border-bottom:1px solid var(--border-subtle);
 }
 .hero-mark{display:flex;align-items:center;justify-content:center;margin-bottom:22px;}
-.hero-logo-img{height:64px;width:auto;display:block;}
+.hero-logo-img{height:72px;width:auto;display:block;}
 .hero-logo-fallback{font-size:40px;font-weight:800;letter-spacing:-.5px;color:var(--text);}
 .hero .greeting{font-size:30px;}
 .hero .greeting-sub{font-size:15.5px;max-width:420px;margin-left:auto;margin-right:auto;}
@@ -452,7 +452,7 @@ body.booting #login-shell{visibility:hidden;}
 }
 .login-card{width:100%;max-width:400px;text-align:center;}
 .login-logo{display:flex;align-items:center;justify-content:center;margin-bottom:26px;}
-.login-logo-img{height:72px;width:auto;display:block;}
+.login-logo-img{height:110px;width:auto;display:block;}
 .login-logo-fallback{font-size:44px;font-weight:800;letter-spacing:-.6px;color:var(--text);}
 .login-tagline{font-size:14.5px;color:var(--text2);line-height:1.6;margin-bottom:44px;}
 .login-form{display:flex;flex-direction:column;gap:18px;text-align:left;}
@@ -469,7 +469,7 @@ body.booting #login-shell{visibility:hidden;}
 @keyframes login-error-in{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:translateY(0);}}
 
 @media (max-width:520px){
-  .login-logo-img{height:56px;}
+  .login-logo-img{height:85px;}
   .login-logo-fallback{font-size:34px;}
   .login-tagline{margin-bottom:34px;}
 }
@@ -483,7 +483,7 @@ body.booting #login-shell{visibility:hidden;}
   #topbar .page-title{font-size:18px;}
   #content{padding:20px 18px 108px;}
   .hero{margin:-20px -18px 28px;padding:32px 18px 26px;}
-  .hero-logo-img{height:44px;}
+  .hero-logo-img{height:110px;width:auto;}
   .hero-logo-fallback{font-size:28px;}
   .hero .greeting{font-size:24px;}
   .hero .greeting-sub{font-size:14px;}
