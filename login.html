@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>anotAI — Entrar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="booting">
+
+<div id="boot-gate">
+  <div class="boot-gate-mark">
+    <img src="assets/logo.png" alt="anotAI" class="boot-gate-logo-img"
+         onerror="this.style.display='none';this.nextElementSibling.style.display='inline-block';" />
+    <span class="boot-gate-logo-fallback" style="display:none">anotAI</span>
+  </div>
+</div>
+
+<div class="login-shell" id="login-shell">
+  <div class="login-card">
+    <div class="login-logo">
+      <img src="assets/logo.png" alt="anotAI" class="login-logo-img"
+           onerror="this.style.display='none';this.nextElementSibling.style.display='inline-block';" />
+      <span class="login-logo-fallback" style="display:none">anotAI</span>
+    </div>
+    <p class="login-tagline">Organização transforma planejamento em experiência.<br>Então, anotAI.</p>
+
+    <form class="login-form" id="login-form">
+      <label class="field">E-mail
+        <input class="input" type="email" id="login-email" autocomplete="username" required autofocus>
+      </label>
+      <label class="field">Senha
+        <input class="input" type="password" id="login-password" autocomplete="current-password" required>
+      </label>
+      <button type="submit" class="btn-primary login-submit" id="login-submit">Entrar</button>
+    </form>
+
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/login.js"></script>
+</body>
+</html>
