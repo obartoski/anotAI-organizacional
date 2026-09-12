@@ -27,5 +27,5 @@
      escrita. Sem estar logado, essa chave sozinha não acessa nada.
    ======================================================================= */
 
-const SUPABASE_URL = 'COLOQUE_AQUI_SUA_URL_DO_SUPABASE';
-const SUPABASE_ANON_KEY = 'COLOQUE_AQUI_SUA_PUBLISHABLE_KEY';
+const SUPABASE_URL = 'https://wxnhhjmnkbocfydimfuv.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_T2hpEXLwdgQtGQJbJcsXvQ_Ss8d00pH';
