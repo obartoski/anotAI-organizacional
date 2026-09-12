@@ -10,7 +10,7 @@ function getGreeting(){
 
 /* Tenta carregar assets/logo.png; se não existir, cai no texto "anotAI". */
 function brandLogoHtml(imgClass, fallbackClass){
-  return `<img src="assets/logo.png" alt="anotAI" class="${imgClass}"
+  return `<img src="assets/anotai.logo.png" alt="anotAI" class="${imgClass}"
       onerror="this.style.display='none';this.nextElementSibling.style.display='inline-block';" />
     <span class="${fallbackClass}" style="display:none">anotAI</span>`;
 }
