@@ -117,21 +117,61 @@
       </div>
       <button class="modal-close" data-action="close-modal" aria-label="Fechar">✕</button>
     </div>
+
     <form data-action="create-contract">
-      <label class="field">Nome *<input class="input" id="ncf-name" required placeholder="Nome do cliente" /></label>
-      <label class="field">Telefone *<input class="input phone-mask" id="ncf-phone" required placeholder="(11) 9 1234-5678" /></label>
-      <div id="ncf-member-field"></div>
-      <label class="field">Preferência de professor<div id="ncf-teacher-field"></div></label>
+
+      <label class="field">
+        Nome *
+        <input
+          class="input"
+          id="ncf-name"
+          required
+          placeholder="Nome do cliente"
+        />
+      </label>
+
+      <label class="field">
+        Telefone *
+        <input
+          class="input phone-mask"
+          id="ncf-phone"
+          required
+          placeholder="(11) 9 1234-5678"
+        />
+      </label>
+
       <div class="form-row2">
-        <label class="field">Data<div id="ncf-date-field"></div></label>
-        <label class="field">Horário<div id="ncf-time-field"></div></label>
+        <label class="field">
+          Data
+          <div id="ncf-date-field"></div>
+        </label>
+
+        <label class="field">
+          Horário
+          <div id="ncf-time-field"></div>
+        </label>
       </div>
+
       <div id="ncf-avail"></div>
-      <button type="submit" class="btn-primary" style="margin-top:4px;width:100%">Criar contratação</button>
+
+      <label class="field">
+        Preferência de professor
+        <div id="ncf-teacher-field"></div>
+      </label>
+
+      <div id="ncf-member-field"></div>
+
+      <button
+        type="submit"
+        class="btn-primary"
+        style="margin-top:4px;width:100%"
+      >
+        Criar contratação
+      </button>
+
     </form>
   </div>
 </div>
-
 <!-- Modal: adicionar aula -->
 <div class="modal-wrap" id="modal-add-lesson">
   <div class="modal">
