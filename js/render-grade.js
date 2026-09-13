@@ -84,10 +84,52 @@ function renderProfile(){
 }
 
 /* ======================= CONFIGURAÇÕES (ainda não disponível) ======================= */
+/* ======================= CONFIGURAÇÕES ======================= */
+/* member: continua vendo exatamente o empty state de sempre.
+   admin: ganha a seção Lixeira (dentro de Configurações — sem item novo
+   na sidebar, conforme pedido). */
 function renderSettings(){
+  if(currentUserRole !== 'admin'){
+    return `
+    <div class="settings-empty">
+      <span class="settings-empty-emoji">😅</span>
+      <p class="settings-empty-text">A equipe anotAI informa que essa área ainda não está disponível para você.</p>
+    </div>`;
+  }
+
   return `
-  <div class="settings-empty">
-    <span class="settings-empty-emoji">😅</span>
-    <p class="settings-empty-text">A equipe anotAI informa que essa área ainda não está disponível para você.</p>
+  <div style="max-width:680px">
+    <h1 class="section-title">Configurações</h1>
+    <p class="section-sub">Gerencie recursos administrativos do anotAI.</p>
+
+    <div class="blocks" style="margin-top:24px">
+      <div class="block">
+        <div class="block-head"><span class="block-title">Lixeira</span></div>
+        <p class="section-sub" style="margin-top:2px">Contratações excluídas recentemente.</p>
+        <div class="trash-list" style="margin-top:16px">
+          ${TRASHED_CONTRACTS.length ? TRASHED_CONTRACTS.map(trashItemHtml).join('') : `<div class="empty-state">Nenhuma contratação na lixeira no momento.</div>`}
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function resolveDeleterName(userId){
+  if(!userId) return 'Usuário';
+  return TRASH_DELETER_NAMES[userId] || 'Usuário';
+}
+
+function trashItemHtml(c){
+  const recovery = trashRecoveryWindow(c.deleted_at);
+  return `<div class="trash-item">
+    <div class="trash-item-main">
+      <span class="trash-item-name">${fmtContractNumber(c.display_number)} — ${escapeHtml(c.client_name)}</span>
+      <span class="trash-item-meta">Excluído ${fmtElapsedSince(c.deleted_at)} por ${escapeHtml(resolveDeleterName(c.deleted_by))}</span>
+      <span class="trash-item-window ${recovery.withinWindow ? 'ok' : 'expired'}">${recovery.label}</span>
+    </div>
+    <div class="trash-item-actions">
+      <button class="btn-secondary" data-action="restore-contract" data-id="${c.id}">Restaurar</button>
+      <button class="btn-secondary btn-danger" data-action="confirm-permanent-delete" data-id="${c.id}">Excluir definitivamente</button>
+    </div>
   </div>`;
 }

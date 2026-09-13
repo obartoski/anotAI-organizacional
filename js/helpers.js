@@ -48,6 +48,28 @@ function fmtNoteTimestamp(iso){
   const time = `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
   return `${date} · ${time}`;
 }
+
+/* ---------- lixeira: tempo desde a exclusão + janela de recuperação rápida ---------- */
+function fmtElapsedSince(iso){
+  const diffMs = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diffMs / 60000);
+  if(mins < 1) return 'agora mesmo';
+  if(mins < 60) return `há ${mins} min`;
+  const hours = Math.floor(mins / 60);
+  if(hours < 24) return `há ${hours}h`;
+  const days = Math.floor(hours / 24);
+  return `há ${days} dia${days === 1 ? '' : 's'}`;
+}
+const TRASH_RECOVERY_WINDOW_HOURS = 24;
+function trashRecoveryWindow(iso){
+  const hoursElapsed = (Date.now() - new Date(iso).getTime()) / 3600000;
+  if(hoursElapsed >= TRASH_RECOVERY_WINDOW_HOURS){
+    return { withinWindow: false, label: 'Prazo de recuperação rápida encerrado' };
+  }
+  const remaining = Math.max(1, Math.ceil(TRASH_RECOVERY_WINDOW_HOURS - hoursElapsed));
+  return { withinWindow: true, label: `Recuperação rápida disponível · ${remaining}h restantes` };
+}
+
 function clientColor(displayNumber){
   return CLIENT_COLORS[(displayNumber - 1) % CLIENT_COLORS.length];
 }

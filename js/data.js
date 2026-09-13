@@ -8,6 +8,8 @@
    ======================================================================= */
 
 var CONTRACTS = [];
+var TRASHED_CONTRACTS = []; // contratações com deleted_at preenchido — só populado para quem o RLS permitir ver (admin)
+var TRASH_DELETER_NAMES = {}; // { userId: display_name } resolvido em reloadAll(), melhor esforço (ver nota em db.js)
 var TEACHERS = [];
 var ALL_TEACHERS = []; // todos os professores (ativos ou não) — só para resolver nomes em telas de leitura
 /* FIXED_SCHEDULE: { monday: ['07:00','19:00'], ... } — só horários ATIVOS,
@@ -22,6 +24,7 @@ var APP_LOAD_ERROR = null;
 var currentUserEmail = null; // preenchido em app.js após confirmar a sessão (Supabase Auth)
 var currentUserId = null; // uuid do usuário autenticado (auth.uid())
 var currentUserDisplayName = null; // preenchido em app.js a partir de user_profiles (com fallback pelo e-mail)
+var currentUserRole = null; // 'admin' | 'member' — vem de user_profiles.role
 
 const CLIENT_COLORS = [
   '#E29A5A', '#6FA8DC', '#B18AE0', '#E0708A', '#7FC29A',

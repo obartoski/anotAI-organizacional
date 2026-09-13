@@ -39,6 +39,8 @@ function mapContractRow(row){
     channel: row.contact_channel || null,
     is_member: row.is_member,
     preferred_teacher_id: row.preferred_teacher_id || null,
+    deleted_at: row.deleted_at || null,
+    deleted_by: row.deleted_by || null,
     notes: (row.contract_notes || [])
       .map(n => ({ id: n.id, created_at: n.created_at, text: n.text })),
     lessons: (row.lessons || [])
@@ -87,7 +89,14 @@ async function reloadAll(){
   if(teachersRes.error) throw teachersRes.error;
   if(scheduleRes.error) throw scheduleRes.error;
 
-  CONTRACTS = contractsRes.data.map(mapContractRow);
+  const allContracts = contractsRes.data.map(mapContractRow);
+  // Ignora contratações excluídas (soft delete) em todas as áreas normais —
+  // Home, Agenda, Clientes, disponibilidade etc. leem CONTRACTS e nunca
+  // precisam saber da lixeira. Para member, o RLS já nem devolve essas
+  // linhas; para admin, o RLS devolve tudo e é aqui que separamos.
+  CONTRACTS = allContracts.filter(c => !c.deleted_at);
+  TRASHED_CONTRACTS = allContracts.filter(c => !!c.deleted_at);
+
   // ALL_TEACHERS: todos (ativos ou não) — usado só para resolver NOME em telas
   // de leitura, para não quebrar contratações antigas com preferência por um
   // professor desativado depois. TEACHERS: só ativos — é a lista usada em
@@ -101,6 +110,22 @@ async function reloadAll(){
     if(row.active) grouped[row.weekday].push(row.start_time.slice(0,5));
   }
   FIXED_SCHEDULE = grouped;
+
+  // Nome de quem excluiu cada item da lixeira. Melhor esforço: a política de
+  // leitura de user_profiles hoje só permite ler o PRÓPRIO perfil
+  // (auth.uid() = id) — sem uma exceção para admin, só é possível resolver
+  // o nome quando o próprio admin foi quem excluiu. Nos demais casos cai no
+  // fallback "Usuário" (nunca mostramos o UUID). Ver aviso na entrega.
+  TRASH_DELETER_NAMES = {};
+  const deleterIds = [...new Set(TRASHED_CONTRACTS.map(c => c.deleted_by).filter(Boolean))];
+  if(deleterIds.length){
+    try{
+      const profiles = await dbGetUserProfilesByIds(deleterIds);
+      profiles.forEach(p => { TRASH_DELETER_NAMES[p.id] = p.display_name; });
+    }catch(err){
+      console.error(err);
+    }
+  }
 
   APP_BOOTED = true;
   APP_LOAD_ERROR = null;
@@ -120,10 +145,34 @@ async function dbUpdateContract(id, patch){
   if(error) throw error;
 }
 async function dbDeleteContract(id){
-  // As tabelas relacionadas (lessons, contract_notes, ...) têm
-  // ON DELETE CASCADE no schema — apagar o contrato basta.
+  // Exclusão DEFINITIVA (usada só a partir da Lixeira, por admin). As tabelas
+  // relacionadas (lessons, contract_notes, ...) têm ON DELETE CASCADE no
+  // schema — apagar o contrato basta.
   const { error } = await sb.from('contracts').delete().eq('id', id);
   if(error) throw error;
+}
+
+/* ---------- lixeira (soft delete) ---------- */
+async function dbSoftDeleteContract(id, userId){
+  const { error } = await sb.from('contracts')
+    .update({ deleted_at: new Date().toISOString(), deleted_by: userId })
+    .eq('id', id);
+  if(error) throw error;
+}
+async function dbRestoreContract(id){
+  const { error } = await sb.from('contracts')
+    .update({ deleted_at: null, deleted_by: null })
+    .eq('id', id);
+  if(error) throw error;
+}
+/* Resolve nomes de quem excluiu, para exibir na Lixeira (nunca UUID cru).
+   Melhor esforço: ver nota em reloadAll() sobre a limitação de RLS. */
+async function dbGetUserProfilesByIds(ids){
+  const uniqueIds = [...new Set(ids)];
+  if(!uniqueIds.length) return [];
+  const { data, error } = await sb.from('user_profiles').select('*').in('id', uniqueIds);
+  if(error) throw error;
+  return data || [];
 }
 
 /* ---------- aulas ---------- */

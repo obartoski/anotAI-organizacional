@@ -110,18 +110,33 @@ function openAddLessonModal(contractId){
   showOverlay();
   document.getElementById('modal-add-lesson').classList.add('show');
 }
-function showToast(msg){
+function showToast(msg, action){
   const wrap = document.getElementById('toast-wrap');
   const el = document.createElement('div');
   el.className = 'toast';
-  el.textContent = msg;
+  const text = document.createElement('span');
+  text.textContent = msg;
+  el.appendChild(text);
+  if(action){
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'toast-action';
+    btn.textContent = action.label;
+    btn.addEventListener('click', () => {
+      clearTimeout(timer);
+      el.remove();
+      action.onClick();
+    });
+    el.appendChild(btn);
+  }
   wrap.appendChild(el);
-  setTimeout(() => el.remove(), 3600);
+  const timer = setTimeout(() => el.remove(), action ? 6000 : 3600);
 }
 
 var _confirmResolve = null;
-function confirmDialog(message, okLabel){
+function confirmDialog(message, okLabel, title){
   return new Promise(resolve => {
+    document.getElementById('confirm-title').textContent = title || 'Confirmar ação';
     document.getElementById('confirm-message').textContent = message;
     document.getElementById('confirm-ok-btn').textContent = okLabel || 'Confirmar';
     _confirmResolve = resolve;
@@ -285,16 +300,62 @@ async function handleAction(action, el){
 
     case 'delete-contract': {
       const ok = await confirmDialog(
-        'Esta ação apagará permanentemente esta contratação e todas as informações associadas. Deseja continuar?',
-        'Excluir permanentemente'
+        'Esta contratação será movida para a lixeira. Você poderá desfazer isso logo em seguida.',
+        'Mover para a lixeira'
+      );
+      if(!ok) break;
+      const contractId = el.dataset.id;
+      try{
+        await dbSoftDeleteContract(contractId, currentUserId);
+        await reloadAll();
+        closeAllDrawers();
+        go('clientes');
+        showToast('Contratação movida para a lixeira.', {
+          label: 'Desfazer',
+          onClick: async () => {
+            try{
+              await dbRestoreContract(contractId);
+              await reloadAll();
+              render();
+              showToast('Contratação restaurada.');
+            }catch(err){
+              console.error(err);
+              showToast('Não foi possível restaurar. Tente novamente.');
+            }
+          },
+        });
+      }catch(err){
+        console.error(err);
+        showToast('Não foi possível excluir. Tente novamente.');
+      }
+      break;
+    }
+
+    case 'restore-contract': {
+      try{
+        await dbRestoreContract(el.dataset.id);
+        await reloadAll();
+        render();
+        showToast('Contratação restaurada.');
+      }catch(err){
+        console.error(err);
+        showToast('Não foi possível restaurar. Tente novamente.');
+      }
+      break;
+    }
+
+    case 'confirm-permanent-delete': {
+      const ok = await confirmDialog(
+        'Esta ação apagará permanentemente a contratação e todas as informações associadas. Não será possível desfazer.',
+        'Excluir definitivamente',
+        'Excluir definitivamente?'
       );
       if(!ok) break;
       try{
         await dbDeleteContract(el.dataset.id);
         await reloadAll();
-        closeAllDrawers();
-        showToast('Contratação excluída.');
-        go('clientes');
+        render();
+        showToast('Contratação excluída definitivamente.');
       }catch(err){
         console.error(err);
         showToast('Não foi possível excluir. Tente novamente.');
@@ -627,9 +688,11 @@ async function loadUserDisplayName(){
   try{
     const profile = await dbGetUserProfile(currentUserId);
     currentUserDisplayName = (profile && profile.display_name) || fallbackDisplayNameFromEmail(currentUserEmail);
+    currentUserRole = (profile && profile.role) || 'member';
   }catch(err){
     console.error(err);
     currentUserDisplayName = fallbackDisplayNameFromEmail(currentUserEmail);
+    currentUserRole = 'member';
   }
 }
 
