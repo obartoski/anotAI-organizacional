@@ -38,6 +38,7 @@ function mapContractRow(row){
     email: row.email || '',
     channel: row.contact_channel || null,
     is_member: row.is_member,
+    preferred_teacher_id: row.preferred_teacher_id || null,
     notes: (row.contract_notes || [])
       .map(n => ({ id: n.id, created_at: n.created_at, text: n.text })),
     lessons: (row.lessons || [])
@@ -78,7 +79,7 @@ async function reloadAll(){
     sb.from('contracts')
       .select(`*, contract_notes(*), lessons(*, lesson_teacher_checks(*), lesson_notes(*), lesson_feedback(*))`)
       .order('display_number', { ascending: true }),
-    sb.from('teachers').select('*').eq('active', true).order('priority_order', { ascending: true }),
+    sb.from('teachers').select('*').order('priority_order', { ascending: true }),
     sb.from('weekly_schedule').select('*').order('weekday').order('start_time'),
   ]);
 
@@ -87,7 +88,12 @@ async function reloadAll(){
   if(scheduleRes.error) throw scheduleRes.error;
 
   CONTRACTS = contractsRes.data.map(mapContractRow);
-  TEACHERS = teachersRes.data.map(t => ({ id: t.id, name: t.name }));
+  // ALL_TEACHERS: todos (ativos ou não) — usado só para resolver NOME em telas
+  // de leitura, para não quebrar contratações antigas com preferência por um
+  // professor desativado depois. TEACHERS: só ativos — é a lista usada em
+  // todo select/formulário de escolha.
+  ALL_TEACHERS = teachersRes.data.map(t => ({ id: t.id, name: t.name, active: t.active }));
+  TEACHERS = ALL_TEACHERS.filter(t => t.active !== false);
 
   SCHEDULE_ROWS = scheduleRes.data;
   const grouped = { monday: [], tuesday: [], wednesday: [], thursday: [], friday: [], saturday: [], sunday: [] };
@@ -101,8 +107,11 @@ async function reloadAll(){
 }
 
 /* ---------- contratos ---------- */
-async function dbCreateContract({ client_name, phone }){
-  const { data, error } = await sb.from('contracts').insert({ client_name, phone }).select('*').single();
+async function dbCreateContract({ client_name, phone, is_member, preferred_teacher_id }){
+  const payload = { client_name, phone };
+  if(is_member !== undefined) payload.is_member = is_member;
+  if(preferred_teacher_id !== undefined) payload.preferred_teacher_id = preferred_teacher_id;
+  const { data, error } = await sb.from('contracts').insert(payload).select('*').single();
   if(error) throw error;
   return data;
 }

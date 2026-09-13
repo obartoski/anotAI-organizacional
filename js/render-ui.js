@@ -76,6 +76,21 @@ function availabilityPreviewHtml(date, time, excludeLessonId){
 }
 
 /* ======================= MODAL: ADICIONAR AULA ======================= */
+/* ---------- select "Preferência de professor" (reutilizado no modal e na edição) ---------- */
+function teacherPreferenceSelectHtml(id, selectedId){
+  // Garante que, se a contratação já tinha preferência por um professor que
+  // foi desativado depois, a opção continua aparecendo (não quebra a tela) —
+  // só não aparece para NOVAS escolhas.
+  const extra = (selectedId && !TEACHERS.some(t => t.id === selectedId))
+    ? ALL_TEACHERS.find(t => t.id === selectedId)
+    : null;
+  return `<select class="input" id="${id}">
+    <option value="" ${!selectedId ? 'selected' : ''}>Sem preferência</option>
+    ${TEACHERS.map(t => `<option value="${t.id}" ${t.id===selectedId?'selected':''}>${escapeHtml(t.name)}</option>`).join('')}
+    ${extra ? `<option value="${extra.id}" selected>${escapeHtml(extra.name)} (inativo)</option>` : ''}
+  </select>`;
+}
+
 function addLessonModalBody(){
   return `
     <div class="form-row2">

@@ -9,6 +9,7 @@
 
 var CONTRACTS = [];
 var TEACHERS = [];
+var ALL_TEACHERS = []; // todos os professores (ativos ou não) — só para resolver nomes em telas de leitura
 /* FIXED_SCHEDULE: { monday: ['07:00','19:00'], ... } — só horários ATIVOS,
    já no formato que a lógica de conflito (helpers.js) espera. */
 var FIXED_SCHEDULE = { monday: [], tuesday: [], wednesday: [], thursday: [], friday: [], saturday: [], sunday: [] };

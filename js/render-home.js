@@ -32,7 +32,11 @@ function eventCardHtml(lesson, contract){
     <span class="go">Abrir →</span>
   </div>`;
 }
-function teacherName(id){ const t = TEACHERS.find(x=>x.id===id); return t ? t.name : '—'; }
+function teacherName(id){
+  if(!id) return '—';
+  const t = TEACHERS.find(x => x.id === id) || ALL_TEACHERS.find(x => x.id === id);
+  return t ? t.name : 'Professor removido';
+}
 
 /* ======================= HOME ======================= */
 function renderHome(){

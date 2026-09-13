@@ -49,6 +49,7 @@ function renderContract(){
         <div><dt>E-mail</dt><dd>${c.email ? escapeHtml(c.email) : '—'}</dd></div>
         <div><dt>Canal de contato</dt><dd>${c.channel ? CHANNEL_LABEL[c.channel] : '—'}</dd></div>
         <div><dt>É aluno da academia?</dt><dd>${c.is_member ? 'Sim' : 'Não'}</dd></div>
+        <div><dt>Preferência de professor</dt><dd>${c.preferred_teacher_id ? escapeHtml(teacherName(c.preferred_teacher_id)) : 'Sem preferência'}</dd></div>
       </dl>`}
     </div>
 
@@ -95,6 +96,7 @@ function clientEditFormHtml(c){
       </select>
     </label>
     ${switchFieldHtml('cf-member', c.is_member, 'É aluno da academia?')}
+    <label class="field">Preferência de professor${teacherPreferenceSelectHtml('cf-teacher', c.preferred_teacher_id)}</label>
     <div style="display:flex;gap:10px;margin-top:2px">
       <button type="submit" class="btn-primary" style="flex:1;min-height:auto;padding:12px">Salvar</button>
       <button type="button" class="btn-secondary" data-action="cancel-edit">Cancelar</button>

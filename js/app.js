@@ -83,9 +83,12 @@ function openQuickPanel(contractId, lessonId){
 function openNewContractModal(){
   document.getElementById('ncf-name').value = '';
   document.getElementById('ncf-phone').value = '';
+  document.getElementById('ncf-member-field').innerHTML = switchFieldHtml('ncf-member', false, 'É aluno?');
+  document.getElementById('ncf-teacher-field').innerHTML = teacherPreferenceSelectHtml('ncf-teacher', null);
   document.getElementById('ncf-date-field').innerHTML = dateFieldHtml('ncf-date', '');
   document.getElementById('ncf-time-field').innerHTML = timeFieldHtml('ncf-time', '');
   document.getElementById('ncf-avail').innerHTML = '';
+  enhanceSelects(document.getElementById('modal-new-contract'));
   showOverlay();
   document.getElementById('modal-new-contract').classList.add('show');
 }
@@ -349,11 +352,15 @@ async function handleFormSubmit(action, form){
     case 'create-contract': {
       const name = document.getElementById('ncf-name').value.trim();
       const phone = document.getElementById('ncf-phone').value.replace(/\D/g, '');
+      const isMember = document.getElementById('ncf-member').checked;
+      const preferredTeacherId = document.getElementById('ncf-teacher').value || null;
       const date = document.getElementById('ncf-date').value;
       const time = document.getElementById('ncf-time').value;
       if(!name || !phone){ showToast('Nome e telefone são obrigatórios.'); return; }
       try{
-        const contract = await dbCreateContract({ client_name: name, phone });
+        const contract = await dbCreateContract({
+          client_name: name, phone, is_member: isMember, preferred_teacher_id: preferredTeacherId,
+        });
         if(date && time){
           const avail = calcAvailability(date, time);
           await dbCreateLesson({ contract_id: contract.id, date, base_time: time, actual_start_time: avail.adjustedStartTime, status: 'interest' });
@@ -417,6 +424,7 @@ async function handleFormSubmit(action, form){
         email: document.getElementById('cf-email').value.trim() || null,
         contact_channel: document.getElementById('cf-channel').value || null,
         is_member: document.getElementById('cf-member').checked,
+        preferred_teacher_id: document.getElementById('cf-teacher').value || null,
       };
       if(!patch.client_name || !patch.phone){ showToast('Nome e telefone são obrigatórios.'); return; }
       await performSave(() => dbUpdateContract(form.dataset.contract, patch), 'Alterações salvas.');
