@@ -32,9 +32,27 @@
       <label class="field">E-mail
         <input class="input" type="email" id="login-email" autocomplete="username" required autofocus>
       </label>
-      <label class="field">Senha
-        <div id="login-password-field"></div>
-      </label>
+     <label class="field">Senha
+  <div class="pw-field">
+    <input
+      class="input"
+      type="password"
+      id="login-password"
+      autocomplete="current-password"
+      required
+    >
+    <button
+      type="button"
+      class="pw-toggle"
+      data-action="toggle-password"
+      data-target="login-password"
+      aria-label="Mostrar senha"
+    >
+      <span class="pw-icon-show"></span>
+      <span class="pw-icon-hide"></span>
+    </button>
+  </div>
+</label>
       <button type="submit" class="btn-primary login-submit" id="login-submit">Entrar</button>
     </form>
 
