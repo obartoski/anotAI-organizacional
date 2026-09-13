@@ -22,6 +22,7 @@ function go(page){
   state.editing = null;
   state.editingNoteId = null;
   state.addingScheduleSlot = false;
+  closeAllDrawers();
   render();
   window.scrollTo({ top: 0 });
 }
@@ -32,7 +33,9 @@ function openLesson(contractId, lessonId){ state.contractId = contractId; state.
    RENDER PRINCIPAL / SHELL
    ======================================================================= */
 function render(){
-  document.getElementById('content').innerHTML = renderPage();
+  const content = document.getElementById('content');
+  content.innerHTML = renderPage();
+  enhanceSelects(content);
   updateNavActiveStates();
   updatePageHeader();
   updateBellCount();
@@ -80,8 +83,8 @@ function openQuickPanel(contractId, lessonId){
 function openNewContractModal(){
   document.getElementById('ncf-name').value = '';
   document.getElementById('ncf-phone').value = '';
-  document.getElementById('ncf-date').value = '';
-  document.getElementById('ncf-time').value = '';
+  document.getElementById('ncf-date-field').innerHTML = dateFieldHtml('ncf-date', '');
+  document.getElementById('ncf-time-field').innerHTML = timeFieldHtml('ncf-time', '');
   document.getElementById('ncf-avail').innerHTML = '';
   showOverlay();
   document.getElementById('modal-new-contract').classList.add('show');
@@ -89,6 +92,7 @@ function openNewContractModal(){
 function openAddLessonModal(contractId){
   addLessonContractId = contractId;
   document.getElementById('modal-add-lesson-body').innerHTML = addLessonModalBody();
+  enhanceSelects(document.getElementById('modal-add-lesson-body'));
   showOverlay();
   document.getElementById('modal-add-lesson').classList.add('show');
 }
@@ -141,11 +145,13 @@ async function performSave(action, successMsg){
 function initIcons(){
   const map = {
     'bell-icon': ICON.bell,
-    'account-icon': ICON.user,
     'mnav-home': ICON.home, 'mnav-agenda': ICON.calendar, 'mnav-plus': ICON.plus,
-    'mnav-grade': ICON.grid, 'mnav-clientes': ICON.users,
+    'mnav-grade': ICON.grid, 'mnav-more': ICON.moreDots,
     'nav-icon-home': ICON.home, 'nav-icon-agenda': ICON.calendar,
-    'nav-icon-clientes': ICON.users, 'nav-icon-grade': ICON.grid, 'nav-icon-settings': ICON.settings,
+    'nav-icon-clientes': ICON.users, 'nav-icon-grade': ICON.grid,
+    'nav-icon-profile': ICON.user, 'nav-icon-settings': ICON.settings, 'nav-icon-signout': ICON.logout,
+    'more-icon-clientes': ICON.users, 'more-icon-profile': ICON.user,
+    'more-icon-settings': ICON.settings, 'more-icon-signout': ICON.logout,
     'sidebar-plus-icon': ICON.plus,
   };
   Object.entries(map).forEach(([id, svg]) => {
@@ -168,16 +174,19 @@ document.addEventListener('click', (e) => {
 });
 
 async function handleAction(action, el){
+  if(handlePickerAction(action, el)) return;
   switch(action){
     case 'nav-home': go('home'); break;
     case 'nav-agenda': go('agenda'); break;
     case 'nav-clientes': go('clientes'); break;
     case 'nav-grade': go('grade'); break;
+    case 'nav-profile': go('profile'); break;
     case 'nav-settings': go('settings'); break;
     case 'nav-new-contract': openNewContractModal(); break;
     case 'open-new-contract': openNewContractModal(); break;
     case 'close-modal': closeAllDrawers(); break;
     case 'close-drawer': closeAllDrawers(); break;
+    case 'open-more-menu': openDrawer('more-drawer'); break;
 
     case 'open-contract': openContract(el.dataset.id); break;
     case 'open-lesson': openLesson(el.dataset.contract, el.dataset.lesson); break;
@@ -260,6 +269,25 @@ async function handleAction(action, el){
       break;
     }
 
+    case 'delete-contract': {
+      const ok = await confirmDialog(
+        'Esta ação apagará permanentemente esta contratação e todas as informações associadas. Deseja continuar?',
+        'Excluir permanentemente'
+      );
+      if(!ok) break;
+      try{
+        await dbDeleteContract(el.dataset.id);
+        await reloadAll();
+        closeAllDrawers();
+        showToast('Contratação excluída.');
+        go('clientes');
+      }catch(err){
+        console.error(err);
+        showToast('Não foi possível excluir. Tente novamente.');
+      }
+      break;
+    }
+
     case 'retry-boot': boot(); break;
 
     default: break;
@@ -271,6 +299,14 @@ document.addEventListener('change', async (e) => {
   const el = e.target.closest('[data-action="change-teacher-check"]');
   if(!el) return;
   await performSave(() => dbSetTeacherCheck(el.dataset.lesson, el.dataset.teacher, el.value), 'Situação do professor atualizada.');
+});
+
+/* Data selecionada na aba "Horários disponíveis" (campo com nosso date picker). */
+document.addEventListener('change', (e) => {
+  if(e.target.id === 'avail-date'){
+    state.availWeekStart = e.target.value;
+    render();
+  }
 });
 
 /* Preview de disponibilidade ao digitar data/horário em formulários. */
@@ -312,7 +348,7 @@ async function handleFormSubmit(action, form){
   switch(action){
     case 'create-contract': {
       const name = document.getElementById('ncf-name').value.trim();
-      const phone = document.getElementById('ncf-phone').value.trim();
+      const phone = document.getElementById('ncf-phone').value.replace(/\D/g, '');
       const date = document.getElementById('ncf-date').value;
       const time = document.getElementById('ncf-time').value;
       if(!name || !phone){ showToast('Nome e telefone são obrigatórios.'); return; }
@@ -377,7 +413,7 @@ async function handleFormSubmit(action, form){
     case 'save-client': {
       const patch = {
         client_name: document.getElementById('cf-name').value.trim(),
-        phone: document.getElementById('cf-phone').value.trim(),
+        phone: document.getElementById('cf-phone').value.replace(/\D/g, ''),
         email: document.getElementById('cf-email').value.trim() || null,
         contact_channel: document.getElementById('cf-channel').value || null,
         is_member: document.getElementById('cf-member').checked,
@@ -472,6 +508,21 @@ async function handleFormSubmit(action, form){
       break;
     }
 
+    case 'save-display-name': {
+      const name = document.getElementById('pf-display-name').value.trim();
+      if(!name){ showToast('Informe um nome de exibição.'); return; }
+      try{
+        await dbUpsertUserProfile(currentUserId, name);
+        currentUserDisplayName = name;
+        render(); // atualiza a Hero imediatamente, sem recarregar a página
+        showToast('Nome atualizado com sucesso.');
+      }catch(err){
+        console.error(err);
+        showToast('Não foi possível atualizar o nome. Tente novamente.');
+      }
+      break;
+    }
+
     default: break;
   }
 }
@@ -531,8 +582,10 @@ async function boot(){
     return; // a boot-gate continua cobrindo a tela durante o redirecionamento
   }
   currentUserEmail = (session.user && session.user.email) || null;
+  currentUserId = (session.user && session.user.id) || null;
 
   try{
+    await loadUserDisplayName();
     await reloadAll();
     initIcons();
     render();
@@ -543,6 +596,21 @@ async function boot(){
     document.getElementById('content').innerHTML = bootErrorHtml(
       'Não foi possível carregar os dados do Supabase. Verifique sua conexão e a configuração em js/config.js, depois tente novamente.'
     );
+  }
+}
+
+/* Carrega o nome de exibição de user_profiles; se não existir linha ou o
+   nome estiver vazio, usa o fallback pelo e-mail (Parte da rodada de
+   correções, item 5). Nunca guarda o nome só em memória/localStorage —
+   o Supabase é sempre a fonte de verdade (item 29); isto aqui é só cache
+   de leitura para a Home não esperar uma segunda consulta.*/
+async function loadUserDisplayName(){
+  try{
+    const profile = await dbGetUserProfile(currentUserId);
+    currentUserDisplayName = (profile && profile.display_name) || fallbackDisplayNameFromEmail(currentUserEmail);
+  }catch(err){
+    console.error(err);
+    currentUserDisplayName = fallbackDisplayNameFromEmail(currentUserEmail);
   }
 }
 

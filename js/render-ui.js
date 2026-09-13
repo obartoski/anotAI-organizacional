@@ -12,6 +12,7 @@ function renderPage(){
     case 'contract': return renderContract();
     case 'lesson': return renderLesson();
     case 'grade': return renderGrade();
+    case 'profile': return renderProfile();
     case 'settings': return renderSettings();
     default: return renderHome();
   }
@@ -23,7 +24,8 @@ const PAGE_TITLES = {
   contract: ['Contratação',''],
   lesson: ['Aula',''],
   grade: ['Grade da Bike','Aulas fixas recorrentes'],
-  settings: ['Perfil','Sua conta no anotAI'],
+  profile: ['Perfil','Sua conta no anotAI'],
+  settings: ['Configurações',''],
 };
 
 /* ======================= NOTIFICAÇÕES (drawer) ======================= */
@@ -77,8 +79,8 @@ function availabilityPreviewHtml(date, time, excludeLessonId){
 function addLessonModalBody(){
   return `
     <div class="form-row2">
-      <label class="field">Data<input class="input" type="date" id="alf-date"></label>
-      <label class="field">Horário-base<input class="input" type="time" id="alf-time"></label>
+      <label class="field">Data${dateFieldHtml('alf-date', '')}</label>
+      <label class="field">Horário-base${timeFieldHtml('alf-time', '')}</label>
     </div>
     <label class="field">Status
       <select class="input" id="alf-status">

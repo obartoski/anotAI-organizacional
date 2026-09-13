@@ -110,6 +110,12 @@ async function dbUpdateContract(id, patch){
   const { error } = await sb.from('contracts').update(patch).eq('id', id);
   if(error) throw error;
 }
+async function dbDeleteContract(id){
+  // As tabelas relacionadas (lessons, contract_notes, ...) têm
+  // ON DELETE CASCADE no schema — apagar o contrato basta.
+  const { error } = await sb.from('contracts').delete().eq('id', id);
+  if(error) throw error;
+}
 
 /* ---------- aulas ---------- */
 async function dbCreateLesson({ contract_id, date, base_time, actual_start_time, status, selected_teacher_id }){
@@ -192,4 +198,23 @@ async function dbSaveFeedback(lessonId, file, description){
 async function dbRemoveFeedbackImage(lessonId){
   const { error } = await sb.from('lesson_feedback').update({ image_url: null }).eq('lesson_id', lessonId);
   if(error) throw error;
+}
+
+/* ---------- perfil do usuário (user_profiles) ---------- */
+async function dbGetUserProfile(userId){
+  const { data, error } = await sb.from('user_profiles').select('*').eq('id', userId).maybeSingle();
+  if(error) throw error;
+  return data; // pode vir null se ainda não existir linha para este usuário
+}
+/* Tenta atualizar; se não existir linha ainda (usuário sem perfil), cria uma.
+   Precisa da política de INSERT em user_profiles — ver
+   supabase/user-profiles-insert-policy.sql (arquivo novo desta rodada). */
+async function dbUpsertUserProfile(userId, displayName){
+  const { data, error } = await sb
+    .from('user_profiles')
+    .upsert({ id: userId, display_name: displayName }, { onConflict: 'id' })
+    .select('*')
+    .single();
+  if(error) throw error;
+  return data;
 }

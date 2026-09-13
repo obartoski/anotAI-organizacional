@@ -103,15 +103,30 @@ function renderCalendarView(){
   </div>`;
 }
 
-/* ---------- "Horários disponíveis": seletor de data + grid semanal ---------- */
+/* ---------- "Horários disponíveis": data + lista real de horários ofertáveis ---------- */
 function renderAvailabilityView(){
+  const date = state.availWeekStart;
+  const slots = computeAvailableSlots(date);
+  const wd = weekdayFromDate(date);
+
   return `
-  <div>
+  <div style="max-width:520px">
     <label class="field" style="max-width:220px">
       Selecione uma data
-      <input type="date" class="input" value="${state.availWeekStart}" data-action="avail-date-change" />
+      ${dateFieldHtml('avail-date', date)}
     </label>
-    ${renderWeekOrDay(state.availWeekStart)}
+    <p class="section-sub" style="margin-top:16px">${WEEKDAY_LABEL[wd]}, ${fmtDateBR(date)}</p>
+
+    <div class="avail-slot-list">
+      ${slots.length ? slots.map(s => `
+        <div class="avail-slot">
+          <span class="avail-slot-time">${s.realTime}</span>
+          <div class="avail-slot-meta">
+            ${s.wasAdjusted ? `<span class="avail-slot-note">horário-base ${s.baseTime}, ajustado</span>` : ''}
+            ${s.softWarnings.length ? `<span class="avail-slot-warning">Existe uma pré-reserva neste horário.</span>` : ''}
+          </div>
+        </div>`).join('') : `<div class="empty-state">Nenhum horário disponível para oferecer nesta data.</div>`}
+    </div>
   </div>`;
 }
 
@@ -122,8 +137,6 @@ function renderWeekOrDay(anchorDate){
   if(isMobile()) return renderDayList(anchorDate);
   return renderWeekGrid(mondayOf(anchorDate));
 }
-
-const GRID_HOURS = ['06:00','07:00','08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00'];
 
 function renderWeekGrid(monday){
   const days = Array.from({length:7}, (_,i) => isoAddDays(monday, i));
@@ -140,7 +153,7 @@ function renderWeekGrid(monday){
   for(const hour of GRID_HOURS){
     rows += `<div class="week-row" style="--cols:7"><div class="week-cell week-hour">${hour}</div>`;
     for(const iso of days){
-      rows += `<div class="week-cell">${slotForHour(iso, hour)}</div>`;
+      rows += `<div class="week-cell week-cell-stack">${bucketCellHtml(iso, hour)}</div>`;
     }
     rows += `</div>`;
   }
@@ -160,17 +173,11 @@ function renderDayList(iso){
   const wd = weekdayFromDate(iso);
   let rows = '';
   for(const hour of GRID_HOURS){
-    const info = slotInfoForHour(iso, hour);
-    if(info.kind === 'free'){
-      rows += `<div class="day-row"><span class="hour">${hour}</span><span class="muted">Livre</span></div>`;
-    } else if(info.kind === 'fixed'){
-      rows += `<div class="day-row fixed"><span class="hour">${hour}</span><span>Bike (aula fixa)</span></div>`;
-    } else {
-      rows += `<div class="day-row ${info.status}" style="--client:${info.color}" data-action="open-quick-panel" data-contract="${info.contractId}" data-lesson="${info.lessonId}">
-        <span class="hour">${info.displayTime}</span>
-        <span>${fmtContractNumber(info.displayNumber)} ${escapeHtml(info.clientName)} — ${info.status==='confirmed'?'Confirmado':'Pré-reserva'}</span>
-      </div>`;
-    }
+    const items = getHourBucketItems(iso, hour);
+    rows += `<div class="day-row-group">
+      <span class="hour">${hour}</span>
+      <div class="day-row-stack">${items.length ? items.map(it => bucketItemHtml(it, true)).join('') : bucketItemHtml(null, true)}</div>
+    </div>`;
   }
   return `
   <div class="week-toolbar">
@@ -183,26 +190,23 @@ function renderDayList(iso){
   <div class="day-list">${rows}</div>`;
 }
 
-function slotInfoForHour(iso, hour){
-  const wd = weekdayFromDate(iso);
-  const isFixed = (FIXED_SCHEDULE[wd]||[]).includes(hour);
-  const evt = allLessonsFlat().find(x => x.lesson.date === iso && (x.lesson.base_time||'').slice(0,5) === hour && ['pre_reservation','confirmed'].includes(x.lesson.status));
-  if(evt){
-    return {
-      kind:'event', status: evt.lesson.status, color: clientColor(evt.contract.display_number),
-      contractId: evt.contract.id, lessonId: evt.lesson.id, displayNumber: evt.contract.display_number,
-      clientName: evt.contract.client_name, displayTime: (evt.lesson.actual_start_time||hour).slice(0,5),
-    };
-  }
-  if(isFixed) return { kind:'fixed' };
-  return { kind:'free' };
+/* ---------- célula/linha com uma ou várias ocorrências na mesma hora ---------- */
+function bucketCellHtml(iso, hour){
+  const items = getHourBucketItems(iso, hour);
+  if(!items.length) return bucketItemHtml(null, false);
+  return items.map(it => bucketItemHtml(it, false)).join('');
 }
-function slotForHour(iso, hour){
-  const info = slotInfoForHour(iso, hour);
-  if(info.kind === 'free') return `<div class="slot free">Livre</div>`;
-  if(info.kind === 'fixed') return `<div class="slot fixed">Bike</div>`;
-  const cls = info.status === 'confirmed' ? 'confirmed' : 'pre';
-  return `<div class="slot ${cls}" style="--client:${info.color}" data-action="open-quick-panel" data-contract="${info.contractId}" data-lesson="${info.lessonId}">
-    ${info.displayTime} — ${fmtContractNumber(info.displayNumber)} ${escapeHtml(info.clientName.split(' ')[0])}<br>${info.status==='confirmed'?'Confirmado':'Pré-reserva'}
+function bucketItemHtml(item, isDayList){
+  if(!item){
+    return `<div class="slot available">${isDayList ? 'Horário livre' : '+ Disponível'}</div>`;
+  }
+  if(item.kind === 'fixed'){
+    return `<div class="slot fixed">Bike · ${item.time}</div>`;
+  }
+  const label = `${fmtContractNumber(item.displayNumber)} ${escapeHtml(isDayList ? item.clientName : item.clientName.split(' ')[0])}`;
+  const statusLabel = item.kind === 'confirmed' ? 'Confirmado' : 'Pré-reserva';
+  const cls = item.kind === 'confirmed' ? 'confirmed' : 'pre';
+  return `<div class="slot ${cls}" style="--client:${clientColor(item.displayNumber)}" data-action="open-quick-panel" data-contract="${item.contractId}" data-lesson="${item.lessonId}">
+    <span class="slot-time">${item.time}</span> — ${label}<br>${statusLabel}
   </div>`;
 }

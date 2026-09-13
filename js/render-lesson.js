@@ -37,8 +37,8 @@ function detalhesBlockHtml(c, l){
       <div class="block-head"><span class="block-title">Detalhes</span></div>
       <form data-action="save-detalhes" data-contract="${c.id}" data-lesson="${l.id}" style="display:flex;flex-direction:column;gap:16px;margin-top:16px">
         <div class="form-row2">
-          <label class="field">Data<input class="input" type="date" id="lf-date" value="${l.date || ''}"></label>
-          <label class="field">Horário-base<input class="input" type="time" id="lf-time" value="${(l.base_time||'').slice(0,5)}"></label>
+          <label class="field">Data${dateFieldHtml('lf-date', l.date || '')}</label>
+          <label class="field">Horário-base${timeFieldHtml('lf-time', (l.base_time||'').slice(0,5))}</label>
         </div>
         <label class="field">Status
           <select class="input" id="lf-status">
@@ -101,7 +101,7 @@ function orcamentoBlockHtml(c, l){
       <form data-action="save-orcamento" data-lesson="${l.id}" style="display:flex;flex-direction:column;gap:16px;margin-top:16px">
         <div class="form-row2">
           <label class="field">Valor (R$)<input class="input" type="number" step="0.01" min="0" id="qf-amount" value="${q.amount ?? ''}"></label>
-          <label class="field">Data de envio<input class="input" type="date" id="qf-sent" value="${q.sent_at || ''}"></label>
+          <label class="field">Data de envio${dateFieldHtml('qf-sent', q.sent_at || '')}</label>
         </div>
         <label class="field">Status
           <select class="input" id="qf-status">
@@ -141,8 +141,8 @@ function financeiroBlockHtml(c, l){
           </label>
         </div>
         <div class="form-row2">
-          <label class="field">Data prevista<input class="input" type="date" id="ff-expected" value="${p.expected || ''}"></label>
-          <label class="field">Data real<input class="input" type="date" id="ff-actual" value="${p.actual || ''}"></label>
+          <label class="field">Data prevista${dateFieldHtml('ff-expected', p.expected || '')}</label>
+          <label class="field">Data real${dateFieldHtml('ff-actual', p.actual || '')}</label>
         </div>
         <label class="field">Status
           <select class="input" id="ff-status">
@@ -174,8 +174,8 @@ function complementosBlockHtml(c, l){
     return `<div class="block">
       <div class="block-head"><span class="block-title">Evento e complementos</span></div>
       <form data-action="save-complementos" data-lesson="${l.id}" style="display:flex;flex-direction:column;gap:16px;margin-top:16px">
-        <label style="display:flex;align-items:center;gap:10px;font-size:14.5px;color:var(--text)"><input type="checkbox" id="cxf-rooftop" ${l.rooftop?'checked':''} style="width:18px;height:18px"> Rooftop</label>
-        <label style="display:flex;align-items:center;gap:10px;font-size:14.5px;color:var(--text)"><input type="checkbox" id="cxf-frans" ${l.frans_cafe?'checked':''} style="width:18px;height:18px"> Fran's Café</label>
+        ${switchFieldHtml('cxf-rooftop', l.rooftop, 'Rooftop')}
+        ${switchFieldHtml('cxf-frans', l.frans_cafe, "Fran's Café")}
         <label class="field">Observação sobre complementos<textarea class="input" id="cxf-notes" rows="2">${escapeHtml(l.complement_notes)}</textarea></label>
         <label class="field">Necessidades especiais / estrutura<textarea class="input" id="cxf-special" rows="2">${escapeHtml(l.special_requirements)}</textarea></label>
         <div style="display:flex;gap:10px">

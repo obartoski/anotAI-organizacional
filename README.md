@@ -135,28 +135,36 @@ versão anterior (sem login), mas duas coisas continuam valendo:
 ```
 index.html              shell da aplicação (sidebar, header, modais, drawers) — protegido por login
 login.html               tela de login (porta de entrada do anotAI)
-styles.css              todo o CSS (identidade visual, responsividade, login)
+styles.css              todo o CSS (identidade visual, responsividade, login, componentes)
 js/
   config.js             ← única coisa que você precisa editar: URL + chave do Supabase
   supabase-client.js      cria o cliente do Supabase (usado por login.html E index.html)
+  ui-components.js         componentes reutilizáveis: senha c/ olho, select, switch, date/time picker, máscara de telefone
   login.js                 lógica da tela de login (sessão, signInWithPassword, redirecionamento)
   data.js                estado dos dados em memória (populado a partir do banco) + labels/constantes
   icons.js                ícones SVG inline
-  helpers.js             formatação, regras de horário/conflito, notificações derivadas
+  helpers.js             formatação, regras de horário/conflito, notificações derivadas, disponibilidade
   db.js                   TODA a comunicação com o Supabase fica centralizada aqui
   render-home.js          Home (hero + fila de trabalho)
-  render-agenda.js        Agenda (abas, calendário mensal, grade semanal/diária)
+  render-agenda.js        Agenda (abas, calendário mensal, grade semanal/diária, horários disponíveis)
   render-clients.js       Lista de clientes + página da contratação
   render-lesson.js        Página da aula (todos os blocos editáveis)
-  render-grade.js         Grade da Bike + página de Perfil (conta, trocar senha, sair)
+  render-grade.js         Grade da Bike + páginas de Perfil e Configurações
   render-ui.js             roteador de páginas, notificações, painel rápido, disponibilidade
   app.js                   estado da interface, eventos, formulários, checagem de sessão, inicialização
 supabase/
-  schema.sql              tabelas, enums, sequences, dados iniciais — cole no SQL Editor do Supabase
-  auth-policies.sql       políticas de acesso (RLS) — exige login para ler/escrever dados
+  schema.sql                    tabelas, enums, sequences, dados iniciais — cole no SQL Editor do Supabase
+  auth-policies.sql             políticas de acesso (RLS) — exige login para ler/escrever dados
+  user-profiles-insert-policy.sql  política adicional p/ user_profiles (ver nota abaixo)
 assets/
-  (coloque aqui o seu logo.png quando tiver um)
+  (coloque aqui o seu anotai.logo.png quando tiver um)
 ```
+
+> **SQL pendente desta rodada:** `supabase/user-profiles-insert-policy.sql` ainda
+> precisa ser executado uma vez no SQL Editor do Supabase. A tabela
+> `user_profiles` já existe e já tinha políticas de leitura/atualização do
+> próprio perfil — faltava só a de criação, usada quando o Perfil salva um
+> nome de exibição pela primeira vez.
 
 ## Sobre login e sessão
 
@@ -171,7 +179,7 @@ em **Sair** (no Perfil) ou ela expirar.
 
 ## Sobre a logo
 
-O projeto está preparado para usar `assets/logo.png`. Basta colocar o arquivo
+O projeto está preparado para usar `assets/anotai.logo.png`. Basta colocar o arquivo
 PNG nessa pasta com esse nome exato. Enquanto o arquivo não existir, a
 interface usa automaticamente o texto "anotAI" estilizado no lugar — nada
 quebra. A mesma imagem é reaproveitada na tela de login, na sidebar e na Home.

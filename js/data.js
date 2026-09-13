@@ -19,6 +19,8 @@ var SCHEDULE_ROWS = [];
 var APP_BOOTED = false;   // true depois do primeiro carregamento bem-sucedido
 var APP_LOAD_ERROR = null;
 var currentUserEmail = null; // preenchido em app.js após confirmar a sessão (Supabase Auth)
+var currentUserId = null; // uuid do usuário autenticado (auth.uid())
+var currentUserDisplayName = null; // preenchido em app.js a partir de user_profiles (com fallback pelo e-mail)
 
 const CLIENT_COLORS = [
   '#E29A5A', '#6FA8DC', '#B18AE0', '#E0708A', '#7FC29A',
@@ -47,3 +49,7 @@ const CHANNEL_LABEL = { whatsapp: 'WhatsApp', talkmi: 'TalkMi', email: 'E-mail' 
 
 const ACTIVE_STATUSES = ['interest','alignment','quote','pre_reservation','confirmed'];
 const INTEREST_STAGE = ['interest','alignment','quote'];
+
+/* Horários-base da grade (linhas visuais da Agenda e candidatos para a aba
+   "Horários disponíveis"). Usado por render-agenda.js e helpers.js. */
+const GRID_HOURS = ['06:00','07:00','08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00'];

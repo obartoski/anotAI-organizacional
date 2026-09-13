@@ -18,7 +18,20 @@ function hideLoginError(){
   el.textContent = '';
 }
 
+/* Contagem de tentativas erradas nesta sessão de tela. Preparado para o
+   futuro (telas diferentes após várias tentativas — ainda não implementadas,
+   ver instruções da rodada de correções, item 2): quem for criar essas
+   variações só precisa ramificar aqui, sem tocar no restante do login. */
+let loginFailedAttempts = 0;
+function getLoginErrorMessage(attemptCount){
+  // attemptCount ainda não é usado para variar a mensagem — combinado.
+  return 'Parece que não vai anotAI 😂';
+}
+
 async function initLoginPage(){
+  document.getElementById('login-password-field').innerHTML =
+    passwordFieldHtml('login-password', 'autocomplete="current-password" required');
+
   const sb = createSupabaseClient();
 
   if(!sb){
@@ -59,13 +72,16 @@ async function initLoginPage(){
     try{
       const { error } = await sb.auth.signInWithPassword({ email, password });
       if(error){
-        showLoginError('Parece que não vai anotAI 😂');
+        loginFailedAttempts++;
+        showLoginError(getLoginErrorMessage(loginFailedAttempts));
         return;
       }
+      loginFailedAttempts = 0;
       window.location.href = 'index.html';
     }catch(err){
       console.error(err);
-      showLoginError('Parece que não vai anotAI 😂');
+      loginFailedAttempts++;
+      showLoginError(getLoginErrorMessage(loginFailedAttempts));
     }finally{
       submitBtn.disabled = false;
       submitBtn.textContent = 'Entrar';

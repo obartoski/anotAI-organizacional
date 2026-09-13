@@ -15,6 +15,7 @@
   <div class="boot-gate-mark">
     <img src="assets/anotai.logo.png" alt="anotAI" class="boot-gate-logo-img"
          onerror="this.style.display='none';this.nextElementSibling.style.display='inline-block';" />
+    <span class="boot-gate-logo-fallback" style="display:none">anotAI</span>
   </div>
 </div>
 
@@ -24,6 +25,7 @@
       <div class="brand-logo">
         <img src="assets/anotai.logo.png" alt="anotAI" class="brand-logo-img"
              onerror="this.style.display='none';this.nextElementSibling.style.display='inline-block';" />
+        <span class="brand-logo-fallback" style="display:none">anotAI</span>
       </div>
     </div>
     <nav class="nav">
@@ -34,7 +36,10 @@
     </nav>
     <div class="sidebar-footer">
       <button class="btn-primary" data-action="nav-new-contract"><span id="sidebar-plus-icon"></span>Nova contratação</button>
-      <button class="nav-item" data-nav="settings" data-action="nav-settings"><span id="nav-icon-settings"></span>Perfil</button>
+      <div class="sidebar-footer-divider"></div>
+      <button class="nav-item" data-nav="profile" data-action="nav-profile"><span id="nav-icon-profile"></span>Perfil</button>
+      <button class="nav-item" data-nav="settings" data-action="nav-settings"><span id="nav-icon-settings"></span>Configurações</button>
+      <button class="nav-item" data-action="sign-out"><span id="nav-icon-signout"></span>Sair</button>
     </div>
   </aside>
 
@@ -45,9 +50,6 @@
         <div class="page-sub" id="page-sub"></div>
       </div>
       <div class="topbar-actions">
-        <button class="icon-btn" id="profile-btn" data-action="nav-settings" aria-label="Perfil">
-          <span id="account-icon"></span>
-        </button>
         <button class="icon-btn" id="bell-btn" data-action="open-notifications" aria-label="Notificações">
           <span id="bell-icon"></span>
           <span class="badge-count" id="bell-count" style="display:none"></span>
@@ -62,11 +64,30 @@
     <button class="mnav-item" data-nav="agenda" data-action="nav-agenda"><span id="mnav-agenda"></span>Agenda</button>
     <button class="mnav-item highlight" data-action="nav-new-contract"><span id="mnav-plus"></span>Novo</button>
     <button class="mnav-item" data-nav="grade" data-action="nav-grade"><span id="mnav-grade"></span>Grade</button>
-    <button class="mnav-item" data-nav="clientes" data-action="nav-clientes"><span id="mnav-clientes"></span>Mais</button>
+    <button class="mnav-item" data-action="open-more-menu"><span id="mnav-more"></span>Mais</button>
   </nav>
 </div>
 
 <div class="overlay" id="overlay"></div>
+
+<!-- Popup compartilhado: date picker / time picker -->
+<div class="picker-popup" id="picker-popup"></div>
+
+<!-- Drawer: "Mais" (mobile) — Clientes/Perfil/Configurações/Sair, já que a sidebar não aparece no celular -->
+<div class="drawer" id="more-drawer">
+  <div class="drawer-head">
+    <h2>Mais</h2>
+    <button class="drawer-close" data-action="close-drawer" aria-label="Fechar">✕</button>
+  </div>
+  <div class="drawer-body scroll-thin">
+    <div class="more-menu">
+      <button class="more-menu-item" data-nav="clientes" data-action="nav-clientes"><span id="more-icon-clientes"></span>Clientes</button>
+      <button class="more-menu-item" data-nav="profile" data-action="nav-profile"><span id="more-icon-profile"></span>Perfil</button>
+      <button class="more-menu-item" data-nav="settings" data-action="nav-settings"><span id="more-icon-settings"></span>Configurações</button>
+      <button class="more-menu-item" data-action="sign-out"><span id="more-icon-signout"></span>Sair</button>
+    </div>
+  </div>
+</div>
 
 <!-- Drawer: notificações -->
 <div class="drawer" id="notif-drawer">
@@ -98,10 +119,10 @@
     </div>
     <form data-action="create-contract">
       <label class="field">Nome *<input class="input" id="ncf-name" required placeholder="Nome do cliente" /></label>
-      <label class="field">Telefone *<input class="input" id="ncf-phone" required placeholder="(11) 91234-5678" /></label>
+      <label class="field">Telefone *<input class="input phone-mask" id="ncf-phone" required placeholder="(11) 9 1234-5678" /></label>
       <div class="form-row2">
-        <label class="field">Data<input class="input" type="date" id="ncf-date" /></label>
-        <label class="field">Horário<input class="input" type="time" id="ncf-time" /></label>
+        <label class="field">Data<div id="ncf-date-field"></div></label>
+        <label class="field">Horário<div id="ncf-time-field"></div></label>
       </div>
       <div id="ncf-avail"></div>
       <button type="submit" class="btn-primary" style="margin-top:4px;width:100%">Criar contratação</button>
@@ -149,6 +170,7 @@
 <script src="js/supabase-client.js"></script>
 <script src="js/data.js"></script>
 <script src="js/icons.js"></script>
+<script src="js/ui-components.js"></script>
 <script src="js/helpers.js"></script>
 <script src="js/db.js"></script>
 <script src="js/render-home.js"></script>

@@ -26,9 +26,19 @@ function fmtCurrency(v){
   if(v === null || v === undefined) return '—';
   return v.toLocaleString('pt-BR', { style:'currency', currency:'BRL' });
 }
+/* ---------- nome de exibição: fallback a partir do e-mail ---------- */
+/* Usado só quando não existe linha em user_profiles (ou display_name vazio)
+   para o usuário autenticado — ex.: "gustavo@anotai.com" -> "Gustavo". */
+function fallbackDisplayNameFromEmail(email){
+  if(!email) return 'Você';
+  const local = email.split('@')[0] || '';
+  if(!local) return 'Você';
+  return local.charAt(0).toUpperCase() + local.slice(1).toLowerCase();
+}
+
 function fmtPhone(phone){
   const digits = (phone||'').replace(/\D/g,'');
-  if(digits.length===11) return `(${digits.slice(0,2)}) ${digits.slice(2,7)}-${digits.slice(7)}`;
+  if(digits.length===11) return `(${digits.slice(0,2)}) ${digits.slice(2,3)} ${digits.slice(3,7)}-${digits.slice(7)}`;
   if(digits.length===10) return `(${digits.slice(0,2)}) ${digits.slice(2,6)}-${digits.slice(6)}`;
   return phone || '—';
 }
@@ -149,7 +159,61 @@ function calcAvailability(date, baseTime, excludeLessonId){
   };
 }
 
-/* ---------- conflitos ao alterar a grade fixa ---------- */
+/* ---------- agrupamento por hora-bucket (grade semanal / diária) ---------- */
+/* GRID_HOURS (definido em render-agenda.js) são as linhas visuais da grade,
+   ex.: '06:00','07:00',...  Qualquer aula fixa ou evento cujo horário REAL
+   comece dentro daquela hora entra no bucket correspondente — sem
+   arredondar o horário exibido (Parte da rodada de correções, item 20). */
+function getHourBucketItems(iso, hourLabel, excludeLessonId){
+  const bucketHour = hourLabel.slice(0, 2);
+  const wd = weekdayFromDate(iso);
+  const items = [];
+
+  for(const slot of (FIXED_SCHEDULE[wd] || [])){
+    if(slot.slice(0, 2) === bucketHour){
+      items.push({ kind: 'fixed', time: slot });
+    }
+  }
+  for(const { lesson, contract } of allLessonsFlat()){
+    if(lesson.date !== iso) continue;
+    if(lesson.id === excludeLessonId) continue;
+    if(!['pre_reservation', 'confirmed'].includes(lesson.status)) continue;
+    const t = lesson.actual_start_time;
+    if(!t || t.slice(0, 2) !== bucketHour) continue;
+    items.push({
+      kind: lesson.status, time: t, contractId: contract.id, lessonId: lesson.id,
+      displayNumber: contract.display_number, clientName: contract.client_name,
+    });
+  }
+  items.sort((a, b) => a.time.localeCompare(b.time));
+  return items;
+}
+
+/* ---------- aba "Horários disponíveis": lista real de horários ofertáveis ---------- */
+/* Não reaproveita a grade de ocupação — calcula, para uma data, quais
+   horários-base resultam em disponibilidade real (Parte da rodada de
+   correções, itens 22-24). Usa os mesmos horários-base da grade (GRID_HOURS)
+   como candidatos e deduplica pelo horário REAL final (já ajustado). */
+function computeAvailableSlots(date){
+  const results = [];
+  const seen = new Set();
+  for(const baseTime of GRID_HOURS){
+    const avail = calcAvailability(date, baseTime);
+    if(!avail.available) continue;
+    if(seen.has(avail.adjustedStartTime)) continue;
+    seen.add(avail.adjustedStartTime);
+    results.push({
+      baseTime,
+      realTime: avail.adjustedStartTime,
+      wasAdjusted: avail.wasAdjusted,
+      softWarnings: avail.softWarnings,
+    });
+  }
+  results.sort((a, b) => a.realTime.localeCompare(b.realTime));
+  return results;
+}
+
+
 /* Verifica se um horário fixo proposto (weekday+start_time) colide com
    reservas CONFIRMADAS futuras já existentes. Não altera nada — só relata
    (Parte 1, item 13 / Parte 3, item 22). */

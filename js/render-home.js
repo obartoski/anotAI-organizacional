@@ -1,5 +1,4 @@
 /* ======================= MARCA / SAUDAÇÃO ======================= */
-const USER_NAME = 'Gustavo';
 
 function getGreeting(){
   const h = new Date().getHours();
@@ -46,7 +45,7 @@ function renderHome(){
   return `
   <div class="hero">
     <div class="hero-mark">${brandLogoHtml('hero-logo-img','hero-logo-fallback')}</div>
-    <h1 class="greeting">${getGreeting()}, ${USER_NAME}.</h1>
+    <h1 class="greeting">${getGreeting()}, ${escapeHtml(currentUserDisplayName || 'Você')}.</h1>
     <p class="greeting-sub">Como está a sua organização hoje?</p>
   </div>
 

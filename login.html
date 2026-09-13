@@ -15,6 +15,7 @@
   <div class="boot-gate-mark">
     <img src="assets/anotai.logo.png" alt="anotAI" class="boot-gate-logo-img"
          onerror="this.style.display='none';this.nextElementSibling.style.display='inline-block';" />
+    <span class="boot-gate-logo-fallback" style="display:none">anotAI</span>
   </div>
 </div>
 
@@ -23,6 +24,7 @@
     <div class="login-logo">
       <img src="assets/anotai.logo.png" alt="anotAI" class="login-logo-img"
            onerror="this.style.display='none';this.nextElementSibling.style.display='inline-block';" />
+      <span class="login-logo-fallback" style="display:none">anotAI</span>
     </div>
     <p class="login-tagline">Organização transforma planejamento em experiência.<br>Então, anotAI.</p>
 
@@ -31,7 +33,7 @@
         <input class="input" type="email" id="login-email" autocomplete="username" required autofocus>
       </label>
       <label class="field">Senha
-        <input class="input" type="password" id="login-password" autocomplete="current-password" required>
+        <div id="login-password-field"></div>
       </label>
       <button type="submit" class="btn-primary login-submit" id="login-submit">Entrar</button>
     </form>
@@ -42,6 +44,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/config.js"></script>
+<script src="js/icons.js"></script>
+<script src="js/ui-components.js"></script>
 <script src="js/supabase-client.js"></script>
 <script src="js/login.js"></script>
 </body>

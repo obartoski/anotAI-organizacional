@@ -28,6 +28,8 @@ function renderContract(){
   const c = getContractById(state.contractId);
   if(!c) return `<div class="empty-state">Contratação não encontrada.</div>`;
 
+  const canDelete = c.lessons.every(l => l.status === 'cancelled' || l.status === 'completed');
+
   return `
   <button class="btn-back" data-action="nav-clientes">${ICON.chevLeft}<span>Clientes</span></button>
   <div class="page-header">
@@ -71,13 +73,18 @@ function renderContract(){
       ${renderTimeline(c.notes, 'contract')}
       ${addNoteForm('contract', c.id)}
     </div>
+
+    ${canDelete ? `
+    <button class="btn-secondary btn-danger" data-action="delete-contract" data-id="${c.id}" style="width:100%;justify-content:center">
+      ${ICON.trash}Excluir contratação
+    </button>` : ''}
   </div>`;
 }
 
 function clientEditFormHtml(c){
   return `<form data-action="save-client" data-contract="${c.id}" style="display:flex;flex-direction:column;gap:16px;margin-top:16px">
     <label class="field">Nome<input class="input" id="cf-name" value="${escapeHtml(c.client_name)}" required></label>
-    <label class="field">Telefone<input class="input" id="cf-phone" value="${escapeHtml(c.phone)}" required></label>
+    <label class="field">Telefone<input class="input phone-mask" id="cf-phone" value="${escapeHtml(fmtPhone(c.phone) === '—' ? '' : fmtPhone(c.phone))}" required></label>
     <label class="field">E-mail<input class="input" id="cf-email" type="email" value="${escapeHtml(c.email||'')}"></label>
     <label class="field">Canal de contato
       <select class="input" id="cf-channel">
@@ -87,9 +94,7 @@ function clientEditFormHtml(c){
         <option value="email" ${c.channel==='email'?'selected':''}>E-mail</option>
       </select>
     </label>
-    <label style="display:flex;align-items:center;gap:10px;font-size:14.5px;color:var(--text)">
-      <input type="checkbox" id="cf-member" ${c.is_member?'checked':''} style="width:18px;height:18px"> É aluno da academia?
-    </label>
+    ${switchFieldHtml('cf-member', c.is_member, 'É aluno da academia?')}
     <div style="display:flex;gap:10px;margin-top:2px">
       <button type="submit" class="btn-primary" style="flex:1;min-height:auto;padding:12px">Salvar</button>
       <button type="button" class="btn-secondary" data-action="cancel-edit">Cancelar</button>

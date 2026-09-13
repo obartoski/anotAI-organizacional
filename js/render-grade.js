@@ -39,7 +39,7 @@ function addScheduleFormHtml(){
           ${WEEKDAY_ORDER.map(wd => `<option value="${wd}">${WEEKDAY_LABEL[wd]}</option>`).join('')}
         </select>
       </label>
-      <label class="field">Horário<input class="input" type="time" id="sf-time" required></label>
+      <label class="field">Horário${timeFieldHtml('sf-time', '')}</label>
     </div>
     <div style="display:flex;gap:10px">
       <button type="submit" class="btn-primary" style="flex:1;min-height:auto;padding:12px">Adicionar</button>
@@ -48,7 +48,8 @@ function addScheduleFormHtml(){
   </form>`;
 }
 
-function renderSettings(){
+/* ======================= PERFIL (conta) ======================= */
+function renderProfile(){
   return `
   <div style="max-width:480px">
     <h1 class="section-title">Perfil</h1>
@@ -63,15 +64,30 @@ function renderSettings(){
       </div>
 
       <div class="block">
-        <div class="block-head"><span class="block-title">Alterar senha</span></div>
-        <form data-action="change-password" style="display:flex;flex-direction:column;gap:16px;margin-top:16px">
-          <label class="field">Nova senha<input class="input" type="password" id="pw-new" minlength="8" required></label>
-          <label class="field">Confirmar nova senha<input class="input" type="password" id="pw-confirm" minlength="8" required></label>
-          <button type="submit" class="btn-primary" style="min-height:auto;padding:12px">Alterar senha</button>
+        <div class="block-head"><span class="block-title">Nome de exibição</span></div>
+        <form data-action="save-display-name" style="display:flex;flex-direction:column;gap:16px;margin-top:16px">
+          <label class="field">Nome de exibição<input class="input" id="pf-display-name" value="${escapeHtml(currentUserDisplayName || '')}" required></label>
+          <button type="submit" class="btn-primary" style="min-height:auto;padding:12px">Salvar alterações</button>
         </form>
       </div>
 
-      <button class="btn-secondary btn-danger" data-action="sign-out" style="width:100%;justify-content:center">Sair</button>
+      <div class="block">
+        <div class="block-head"><span class="block-title">Alterar senha</span></div>
+        <form data-action="change-password" style="display:flex;flex-direction:column;gap:16px;margin-top:16px">
+          <label class="field">Nova senha${passwordFieldHtml('pw-new', 'minlength="8" required')}</label>
+          <label class="field">Confirmar nova senha${passwordFieldHtml('pw-confirm', 'minlength="8" required')}</label>
+          <button type="submit" class="btn-primary" style="min-height:auto;padding:12px">Alterar senha</button>
+        </form>
+      </div>
     </div>
+  </div>`;
+}
+
+/* ======================= CONFIGURAÇÕES (ainda não disponível) ======================= */
+function renderSettings(){
+  return `
+  <div class="settings-empty">
+    <span class="settings-empty-emoji">😅</span>
+    <p class="settings-empty-text">A equipe anotAI informa que essa área ainda não está disponível para você.</p>
   </div>`;
 }
