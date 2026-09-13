@@ -80,13 +80,24 @@ function openQuickPanel(contractId, lessonId){
   document.getElementById('quick-drawer-body').innerHTML = renderQuickPanel();
   openDrawer('quick-drawer');
 }
+/* Só o switch (ícone/título/subtítulo do "É aluno?" agora são markup estático
+   no index.html — item 5 do refinamento visual do modal Nova contratação).
+   Mesma estrutura .switch/.switch-track/.switch-thumb de switchFieldHtml(),
+   sem alterar essa função (ainda usada, sem ícone, em outras telas). */
+function memberSwitchOnlyHtml(checked){
+  return `<span class="switch">
+    <input type="checkbox" id="ncf-member" ${checked ? 'checked' : ''}>
+    <span class="switch-track"><span class="switch-thumb"></span></span>
+  </span>`;
+}
+
 function openNewContractModal(){
   document.getElementById('ncf-name').value = '';
   document.getElementById('ncf-phone').value = '';
-  document.getElementById('ncf-member-field').innerHTML = switchFieldHtml('ncf-member', false, 'É aluno?');
+  document.getElementById('ncf-member-field').innerHTML = memberSwitchOnlyHtml(false);
   document.getElementById('ncf-teacher-field').innerHTML = teacherPreferenceSelectHtml('ncf-teacher', null);
   document.getElementById('ncf-date-field').innerHTML = dateFieldHtml('ncf-date', '');
-  document.getElementById('ncf-time-field').innerHTML = timeFieldHtml('ncf-time', '');
+  document.getElementById('ncf-time-field').innerHTML = timeFieldHtml('ncf-time', '', ICON.clock);
   document.getElementById('ncf-avail').innerHTML = '';
   enhanceSelects(document.getElementById('modal-new-contract'));
   showOverlay();

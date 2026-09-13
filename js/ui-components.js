@@ -122,11 +122,11 @@ function dateFieldHtml(id, isoValue){
     <input type="hidden" id="${id}" value="${isoValue || ''}">
   </div>`;
 }
-function timeFieldHtml(id, hhmm){
+function timeFieldHtml(id, hhmm, icon){
   const display = hhmm ? hhmm.slice(0,5) : 'Selecionar horário';
   return `<div class="tp-field">
     <button type="button" class="tp-trigger input" data-action="tp-toggle" data-target="${id}">
-      <span class="tp-display">${display}</span>${ICON.chevDown}
+      <span class="tp-display">${display}</span>${icon || ICON.chevDown}
     </button>
     <input type="hidden" id="${id}" value="${hhmm ? hhmm.slice(0,5) : ''}">
   </div>`;
