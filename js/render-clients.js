@@ -28,8 +28,7 @@ function renderContract(){
   const c = getContractById(state.contractId);
   if(!c) return `<div class="empty-state">Contratação não encontrada.</div>`;
 
-  const canDelete = c.lessons.every(l => l.status === 'cancelled' || l.status === 'completed');
-
+const canDelete = true;
   return `
   <button class="btn-back" data-action="nav-clientes">${ICON.chevLeft}<span>Clientes</span></button>
   <div class="page-header">
