@@ -29,8 +29,6 @@ function getLoginErrorMessage(attemptCount){
 }
 
 async function initLoginPage(){
-  document.getElementById('login-password-field').innerHTML =
-    passwordFieldHtml('login-password', 'autocomplete="current-password" required');
 
   const sb = createSupabaseClient();
 
