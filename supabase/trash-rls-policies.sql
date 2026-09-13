@@ -75,6 +75,7 @@ to authenticated
 using (
   deleted_at is null
   or public.is_admin()
+  or deleted_by = auth.uid()
 )
 with check (
   public.is_admin()
@@ -493,6 +494,25 @@ using (
   public.is_admin()
 );
 
+-- =============================================================================
+-- USER PROFILES — LEITURA ADMINISTRATIVA
+-- =============================================================================
+
+-- Members continuam podendo consultar apenas o próprio perfil.
+-- Admins também podem consultar os demais perfis para identificar,
+-- por exemplo, quem enviou uma contratação para a lixeira.
+
+drop policy if exists "admin_read_all_profiles"
+on public.user_profiles;
+
+create policy "admin_read_all_profiles"
+on public.user_profiles
+for select
+to authenticated
+using (
+  auth.uid() = id
+  or public.is_admin()
+);
 
 -- =============================================================================
 -- FIM
