@@ -177,6 +177,32 @@
   </div>
 </div>
 
+<!-- Modal: nova mensagem (Central de Notificações) -->
+<div class="modal-wrap" id="modal-new-message">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <h2>Nova mensagem</h2>
+        <p>Envie um aviso interno para outro usuário do anotAI.</p>
+      </div>
+      <button class="modal-close" data-action="close-modal" aria-label="Fechar">✕</button>
+    </div>
+    <form data-action="create-internal-notification">
+      <label class="field">Para<div id="nmf-recipient-field"></div></label>
+      <label class="field">Título<input class="input" id="nmf-title" required placeholder="Ex.: Eduardo — pagamento atrasado"></label>
+      <label class="field">Mensagem<textarea class="input" id="nmf-message" rows="4" required placeholder="Descreva o que precisa ser feito..."></textarea></label>
+      <div class="form-row2">
+        <label class="field">Prazo — Data (opcional)<div id="nmf-due-date-field"></div></label>
+        <label class="field">Horário (opcional)<div id="nmf-due-time-field"></div></label>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:4px">
+        <button type="button" class="btn-secondary" data-action="close-modal" style="flex:1">Cancelar</button>
+        <button type="submit" class="btn-primary" style="flex:1">Enviar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- Modal: confirmação genérica -->
 <div class="modal-wrap" id="modal-confirm">
   <div class="modal" style="width:400px">

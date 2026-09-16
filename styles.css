@@ -384,8 +384,18 @@ label.field{display:flex;flex-direction:column;gap:8px;font-size:13.5px;color:va
 
 .notif-item{border:1px solid var(--border-subtle);border-radius:var(--radius-sm);padding:16px;margin-bottom:14px;}
 .notif-kind{font-size:11.5px;letter-spacing:.4px;color:var(--muted);font-weight:700;}
-.notif-msg{font-size:14.5px;color:var(--text);margin-top:6px;line-height:1.5;}
+.notif-msg{font-size:14.5px;color:var(--text);margin-top:6px;line-height:1.5;overflow-wrap:break-word;}
 .notif-link{margin-top:10px;display:inline-block;font-size:14px;font-weight:600;color:var(--tiffany);}
+
+/* ---------- mensagens internas: nuance lilás discreta, sem fugir da identidade ---------- */
+.notif-internal{border-color:rgba(177,138,224,.28);background:rgba(177,138,224,.05);}
+.notif-internal .notif-kind{color:var(--st-quote);}
+.notif-internal-parties{font-size:12px;font-weight:700;letter-spacing:.3px;color:var(--text2);margin-top:8px;}
+.notif-internal-title{font-size:14.5px;font-weight:700;color:var(--text);margin-top:4px;overflow-wrap:break-word;}
+.notif-internal-due{font-size:12.5px;color:var(--st-quote);font-weight:600;margin-top:8px;}
+.notif-internal-sent-at{font-size:11.5px;color:var(--muted);margin-top:8px;}
+.notif-internal-actions{display:flex;gap:16px;margin-top:10px;}
+.notif-internal-actions .btn-link{margin-top:0;}
 .notif-link:hover{text-decoration:underline;}
 
 .quick-panel{padding:0;}
