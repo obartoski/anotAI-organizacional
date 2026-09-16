@@ -18,6 +18,8 @@ var FIXED_SCHEDULE = { monday: [], tuesday: [], wednesday: [], thursday: [], fri
 /* SCHEDULE_ROWS: linhas cruas da tabela weekly_schedule (com id), usadas
    pela tela "Grade da Bike" para poder editar/remover cada horário. */
 var SCHEDULE_ROWS = [];
+var USER_PROFILES = []; // todos os perfis legíveis (id, display_name, role) — select "Para" da Central de Notificações
+var INTERNAL_NOTIFICATIONS = []; // linhas cruas de notifications onde source='internal' (enviadas ou recebidas pelo usuário)
 
 var APP_BOOTED = false;   // true depois do primeiro carregamento bem-sucedido
 var APP_LOAD_ERROR = null;

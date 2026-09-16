@@ -74,6 +74,17 @@ function closeAllDrawers(){
 function openNotifDrawer(){
   document.getElementById('notif-drawer-body').innerHTML = renderNotifDrawerBody();
   openDrawer('notif-drawer');
+  markVisibleInternalNotificationsSeen();
+}
+function openNewMessageModal(){
+  document.getElementById('nmf-recipient-field').innerHTML = recipientSelectHtml('nmf-recipient');
+  document.getElementById('nmf-title').value = '';
+  document.getElementById('nmf-message').value = '';
+  document.getElementById('nmf-due-date-field').innerHTML = dateFieldHtml('nmf-due-date', '');
+  document.getElementById('nmf-due-time-field').innerHTML = timeFieldHtml('nmf-due-time', '');
+  enhanceSelects(document.getElementById('modal-new-message'));
+  showOverlay();
+  document.getElementById('modal-new-message').classList.add('show');
 }
 function openQuickPanel(contractId, lessonId){
   quickPanelTarget = { contractId, lessonId };
@@ -243,6 +254,34 @@ async function handleAction(action, el){
 
     case 'open-notifications': openNotifDrawer(); break;
     case 'open-contract-from-notif': closeAllDrawers(); openContract(el.dataset.id); break;
+    case 'open-new-message-modal': openNewMessageModal(); break;
+
+    case 'resolve-notification': {
+      try{
+        await dbResolveNotification(el.dataset.id);
+        await reloadAll();
+        document.getElementById('notif-drawer-body').innerHTML = renderNotifDrawerBody();
+        updateBellCount();
+        showToast('Marcada como resolvida.');
+      }catch(err){
+        console.error(err);
+        showToast('Não foi possível atualizar. Tente novamente.');
+      }
+      break;
+    }
+    case 'dismiss-notification': {
+      try{
+        await dbDismissNotification(el.dataset.id);
+        await reloadAll();
+        document.getElementById('notif-drawer-body').innerHTML = renderNotifDrawerBody();
+        updateBellCount();
+        showToast('Mensagem dispensada.');
+      }catch(err){
+        console.error(err);
+        showToast('Não foi possível atualizar. Tente novamente.');
+      }
+      break;
+    }
 
     case 'edit-block': state.editing = el.dataset.block; render(); break;
     case 'cancel-edit': state.editing = null; render(); break;
@@ -568,6 +607,29 @@ async function handleFormSubmit(action, form){
         if(!ok) return;
       }
       await performSave(() => dbAddScheduleSlot(weekday, time), 'Horário adicionado à grade.');
+      break;
+    }
+
+    case 'create-internal-notification': {
+      const recipientId = document.getElementById('nmf-recipient').value;
+      const title = document.getElementById('nmf-title').value.trim();
+      const message = document.getElementById('nmf-message').value.trim();
+      const dueDate = document.getElementById('nmf-due-date').value;
+      const dueTime = document.getElementById('nmf-due-time').value;
+      if(!recipientId){ showToast('Selecione um destinatário.'); return; }
+      if(!title){ showToast('Informe um título.'); return; }
+      if(!message){ showToast('Escreva a mensagem.'); return; }
+      const dueAt = (dueDate && dueTime) ? new Date(`${dueDate}T${dueTime}:00`).toISOString() : null;
+      try{
+        await dbCreateInternalNotification({ title, message, recipient_user_id: recipientId, due_at: dueAt });
+        await reloadAll();
+        closeAllDrawers();
+        showToast('Mensagem enviada.');
+        openNotifDrawer();
+      }catch(err){
+        console.error(err);
+        showToast('Não foi possível enviar. Tente novamente.');
+      }
       break;
     }
 

@@ -29,17 +29,101 @@ const PAGE_TITLES = {
 };
 
 /* ======================= NOTIFICAÇÕES (drawer) ======================= */
-function renderNotifDrawerBody(){
-  const notifs = buildNotifications();
-  if(!notifs.length) return `<p class="text2" style="font-size:14.5px">Nenhuma pendência no momento.</p>`;
-  return notifs.map(n => `
-    <div class="notif-item">
-      <div class="notif-kind">${n.type === 'payment_deadline' ? 'PAGAMENTO' : 'EVENTO'}</div>
-      <div class="notif-msg">${escapeHtml(n.message)}</div>
-      <button class="notif-link" data-action="open-contract-from-notif" data-id="${n.contractId}">Ver detalhes</button>
-    </div>`).join('');
+/* A partir desta rodada, o drawer virou uma Central de Notificações: combina
+   os avisos automáticos de sempre (buildNotifications(), em helpers.js —
+   inalterado) com mensagens internas persistidas em `notifications`
+   (source='internal'). As duas origens convivem, mas nunca se confundem. */
+
+function resolveUserName(userId){
+  if(!userId) return 'Usuário';
+  const p = USER_PROFILES.find(x => x.id === userId);
+  return (p && p.display_name) || 'Usuário';
 }
-function bellBadgeCount(){ return buildNotifications().length; }
+
+/* Mensagens internas visíveis na lista principal:
+   - recebidas: só enquanto ativas (não resolvidas/dispensadas);
+   - enviadas (e o usuário não é o destinatário): sempre visíveis, marcadas "Enviada".
+   Evita duplicar quando o usuário é remetente E destinatário da mesma mensagem. */
+function getVisibleInternalNotifications(){
+  return INTERNAL_NOTIFICATIONS.filter(n => {
+    const isReceived = n.recipient_user_id === currentUserId;
+    const isSent = n.sender_user_id === currentUserId;
+    if(!isReceived && !isSent) return false;
+    if(isReceived) return !n.resolved_at && !n.dismissed_at;
+    return true;
+  });
+}
+
+function internalNotificationHtml(n){
+  const isReceived = n.recipient_user_id === currentUserId;
+  const senderName = resolveUserName(n.sender_user_id);
+  const recipientName = resolveUserName(n.recipient_user_id);
+  return `
+    <div class="notif-item notif-internal">
+      <div class="notif-kind">MENSAGEM${!isReceived ? ' · ENVIADA' : ''}</div>
+      <div class="notif-internal-parties">${escapeHtml(senderName.toUpperCase())} → ${escapeHtml(recipientName.toUpperCase())}</div>
+      <div class="notif-internal-title">${escapeHtml(n.title || '')}</div>
+      <div class="notif-msg">${escapeHtml(n.message || '')}</div>
+      ${n.due_at ? `<div class="notif-internal-due">Prazo: ${fmtDueAt(n.due_at)}</div>` : ''}
+      <div class="notif-internal-sent-at">Enviada ${fmtNoteTimestamp(n.created_at)}</div>
+      ${isReceived ? `
+        <div class="notif-internal-actions">
+          <button class="btn-link" data-action="resolve-notification" data-id="${n.id}">Resolver</button>
+          <button class="btn-link" data-action="dismiss-notification" data-id="${n.id}">Dispensar</button>
+        </div>` : ''}
+    </div>`;
+}
+
+function renderNotifDrawerBody(){
+  const systemNotifs = buildNotifications();
+  const internal = getVisibleInternalNotifications();
+  const nothing = !systemNotifs.length && !internal.length;
+
+  return `
+    <button class="btn-primary" data-action="open-new-message-modal" style="width:100%;min-height:auto;padding:12px;margin-bottom:18px">${ICON.plus}Nova mensagem</button>
+    ${nothing ? `<p class="text2" style="font-size:14.5px">Nenhuma pendência no momento.</p>` : ''}
+    ${internal.map(internalNotificationHtml).join('')}
+    ${systemNotifs.map(n => `
+      <div class="notif-item">
+        <div class="notif-kind">${n.type === 'payment_deadline' ? 'PAGAMENTO' : 'EVENTO'}</div>
+        <div class="notif-msg">${escapeHtml(n.message)}</div>
+        <button class="notif-link" data-action="open-contract-from-notif" data-id="${n.contractId}">Ver detalhes</button>
+      </div>`).join('')}
+  `;
+}
+
+function bellBadgeCount(){
+  const systemCount = buildNotifications().length;
+  const internalCount = INTERNAL_NOTIFICATIONS.filter(n =>
+    n.recipient_user_id === currentUserId && !n.resolved_at && !n.dismissed_at
+  ).length;
+  return systemCount + internalCount;
+}
+
+/* Marca como "vistas" (seen) as mensagens recebidas e ativas que acabaram de
+   aparecer na Central — item opcional da rodada. Não bloqueia a interface:
+   dispara em segundo plano e atualiza o estado local para não repetir a
+   chamada a cada abertura do drawer antes do próximo reloadAll(). */
+function markVisibleInternalNotificationsSeen(){
+  INTERNAL_NOTIFICATIONS
+    .filter(n => n.recipient_user_id === currentUserId && !n.seen && !n.resolved_at && !n.dismissed_at)
+    .forEach(n => {
+      n.seen = true;
+      dbMarkNotificationSeen(n.id).catch(err => console.error(err));
+    });
+}
+
+/* ---------- select "Para" do modal Nova mensagem ---------- */
+function recipientSelectHtml(id){
+  const options = USER_PROFILES
+    .filter(p => p.id !== currentUserId) // preferencialmente não mostrar o próprio usuário
+    .map(p => `<option value="${p.id}">${escapeHtml(p.display_name)}</option>`)
+    .join('');
+  return `<select class="input" id="${id}">
+    <option value="" selected>Selecione um destinatário</option>
+    ${options}
+  </select>`;
+}
 
 /* ======================= PAINEL RÁPIDO (evento no calendário) ======================= */
 var quickPanelTarget = null;

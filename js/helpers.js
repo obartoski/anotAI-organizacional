@@ -49,6 +49,12 @@ function fmtNoteTimestamp(iso){
   return `${date} · ${time}`;
 }
 
+/* ---------- mensagens internas: prazo (due_at) ---------- */
+function fmtDueAt(iso){
+  const d = new Date(iso);
+  return `${pad2(d.getDate())}/${pad2(d.getMonth()+1)} às ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+}
+
 /* ---------- lixeira: tempo desde a exclusão + janela de recuperação rápida ---------- */
 function fmtElapsedSince(iso){
   const diffMs = Date.now() - new Date(iso).getTime();

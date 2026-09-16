@@ -127,6 +127,25 @@ async function reloadAll(){
     }
   }
 
+  // Perfis de usuário (para o select "Para" da Central de Notificações e para
+  // exibir nomes) e mensagens internas persistidas. Buscados à parte: se por
+  // qualquer motivo falharem, o resto do app continua funcionando (item 15
+  // da rodada — nunca travar o boot por causa da Central de Notificações).
+  try{
+    const [profilesRes, notifRes] = await Promise.all([
+      sb.from('user_profiles').select('*'),
+      sb.from('notifications').select('*').eq('source', 'internal').order('created_at', { ascending: false }),
+    ]);
+    if(profilesRes.error) throw profilesRes.error;
+    if(notifRes.error) throw notifRes.error;
+    USER_PROFILES = profilesRes.data || [];
+    INTERNAL_NOTIFICATIONS = notifRes.data || [];
+  }catch(err){
+    console.error(err);
+    USER_PROFILES = [];
+    INTERNAL_NOTIFICATIONS = [];
+  }
+
   APP_BOOTED = true;
   APP_LOAD_ERROR = null;
 }
@@ -275,4 +294,47 @@ async function dbUpsertUserProfile(userId, displayName){
     .single();
   if(error) throw error;
   return data;
+}
+
+/* ---------- central de notificações (mensagens internas) ---------- */
+/* Carregamento em si acontece dentro de reloadAll() (para não duplicar
+   fetch); estas duas funções ficam disponíveis para quem quiser recarregar
+   sob demanda no futuro, mantendo o padrão de acesso centralizado. */
+async function dbLoadUserProfiles(){
+  const { data, error } = await sb.from('user_profiles').select('*');
+  if(error) throw error;
+  return data || [];
+}
+async function dbLoadInternalNotifications(){
+  const { data, error } = await sb.from('notifications')
+    .select('*')
+    .eq('source', 'internal')
+    .order('created_at', { ascending: false });
+  if(error) throw error;
+  return data || [];
+}
+async function dbCreateInternalNotification({ title, message, recipient_user_id, due_at }){
+  const { error } = await sb.from('notifications').insert({
+    source: 'internal',
+    type: null,
+    title,
+    message,
+    sender_user_id: currentUserId,
+    recipient_user_id,
+    due_at: due_at || null,
+    seen: false,
+  });
+  if(error) throw error;
+}
+async function dbMarkNotificationSeen(id){
+  const { error } = await sb.from('notifications').update({ seen: true }).eq('id', id);
+  if(error) throw error;
+}
+async function dbResolveNotification(id){
+  const { error } = await sb.from('notifications').update({ resolved_at: new Date().toISOString() }).eq('id', id);
+  if(error) throw error;
+}
+async function dbDismissNotification(id){
+  const { error } = await sb.from('notifications').update({ dismissed_at: new Date().toISOString() }).eq('id', id);
+  if(error) throw error;
 }
